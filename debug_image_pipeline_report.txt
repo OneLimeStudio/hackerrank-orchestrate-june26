@@ -1,0 +1,210 @@
+=== DIAGNOSTIC START ===
+
+--- IMAGE PATH RESOLUTION & LOAD TEST ---
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_001/img_1.jpg
+  Exists: True
+  Loaded successfully: 600x400, 52740 bytes, mode=RGB
+  Raw file first 8 bytes: b'RIFF\xfc\xcd\x00\x00'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_002/img_1.jpg
+  Exists: True
+  Loaded successfully: 275x183, 6193 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_002/img_2.jpg
+  Exists: True
+  Loaded successfully: 500x304, 40048 bytes, mode=RGB
+  Raw file first 8 bytes: b'RIFFh\x9c\x00\x00'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_003/img_1.jpg
+  Exists: True
+  Loaded successfully: 928x501, 693627 bytes, mode=RGB
+  Raw file first 8 bytes: b'\x89PNG\r\n\x1a\n'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_003/img_2.jpg
+  Exists: True
+  Loaded successfully: 1866x1246, 1129676 bytes, mode=RGBA
+  Raw file first 8 bytes: b'\x89PNG\r\n\x1a\n'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_004/img_1.jpg
+  Exists: True
+  Loaded successfully: 356x141, 8292 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_005/img_1.jpg
+  Exists: True
+  Loaded successfully: 376x134, 3984 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_005/img_2.jpg
+  Exists: True
+  Loaded successfully: 516x387, 25458 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_006/img_1.jpg
+  Exists: True
+  Loaded successfully: 600x400, 47164 bytes, mode=RGB
+  Raw file first 8 bytes: b'RIFF4\xb8\x00\x00'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_007/img_1.jpg
+  Exists: True
+  Loaded successfully: 1740x1386, 2044103 bytes, mode=RGBA
+  Raw file first 8 bytes: b'\x89PNG\r\n\x1a\n'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_007/img_2.jpg
+  Exists: True
+  Loaded successfully: 730x598, 55139 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_008/img_1.jpg
+  Exists: True
+  Loaded successfully: 1470x980, 164213 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_009/img_1.jpg
+  Exists: True
+  Loaded successfully: 900x600, 905376 bytes, mode=RGB
+  Raw file first 8 bytes: b'\x89PNG\r\n\x1a\n'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_010/img_1.jpg
+  Exists: True
+  Loaded successfully: 275x183, 4799 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_010/img_2.jpg
+  Exists: True
+  Loaded successfully: 678x452, 35536 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_011/img_1.jpg
+  Exists: True
+  Loaded successfully: 766x400, 45182 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_012/img_1.jpg
+  Exists: True
+  Loaded successfully: 2000x1125, 784307 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe1\x02\x8aEx'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_012/img_2.jpg
+  Exists: True
+  Loaded successfully: 2064x1728, 5909005 bytes, mode=RGBA
+  Raw file first 8 bytes: b'\x89PNG\r\n\x1a\n'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_013/img_1.jpg
+  Exists: True
+  Loaded successfully: 1500x1000, 200973 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_014/img_1.jpg
+  Exists: True
+  Loaded successfully: 640x853, 36718 bytes, mode=RGB
+  Raw file first 8 bytes: b'RIFFf\x8f\x00\x00'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_015/img_1.jpg
+  Exists: True
+  Loaded successfully: 640x853, 43122 bytes, mode=RGB
+  Raw file first 8 bytes: b'RIFFj\xa8\x00\x00'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_016/img_1.jpg
+  Exists: True
+  Loaded successfully: 645x360, 59392 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_016/img_2.jpg
+  Exists: True
+  Loaded successfully: 540x360, 24425 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_017/img_1.jpg
+  Exists: True
+  Loaded successfully: 878x999, 99165 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe1\x00\xbcEx'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_018/img_1.jpg
+  Exists: True
+  Loaded successfully: 1200x500, 51342 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_018/img_2.jpg
+  Exists: True
+  Loaded successfully: 728x408, 22560 bytes, mode=RGB
+  Raw file first 8 bytes: b'RIFF\x18X\x00\x00'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_019/img_1.jpg
+  Exists: True
+  Loaded successfully: 560x346, 33671 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_020/img_1.jpg
+  Exists: True
+  Loaded successfully: 1024x559, 131483 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+Resolved Path: W:\Github\hackerrank-orchestrate-june26\dataset\images/sample/case_020/img_2.jpg
+  Exists: True
+  Loaded successfully: 640x447, 47770 bytes, mode=RGB
+  Raw file first 8 bytes: b'\xff\xd8\xff\xe0\x00\x10JF'
+
+--- COUNTS ---
+Total Referenced: 29
+Total Resolved: 29
+Total Loaded: 29
+COUNTS MATCH: Pipeline is healthy at the I/O layer.
+
+--- MAIN.PY PAYLOAD ASSEMBLY TEST (All claims) ---
+Claim 1 (user_001): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.WebPImagePlugin.WebPImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xc8\xc4\xb3\xc8\xc4\xb3\xc8\xc4'
+Claim 2 (user_002): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.WebPImagePlugin.WebPImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xc8\xc4\xb3\xc8\xc4\xb3\xc8\xc4'
+Claim 3 (user_004): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'KKMLLNMM'
+  Image 2: type=<class 'PIL.WebPImagePlugin.WebPImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\xa3\xa1\x91\xa4\xa1\x95\xa7\xa4'
+Claim 4 (user_007): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'KKMLLNMM'
+  Image 2: type=<class 'PIL.WebPImagePlugin.WebPImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\xa3\xa1\x91\xa4\xa1\x95\xa7\xa4'
+Claim 5 (user_005): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xe5\xf3\xfe\xe5\xf3\xfe\xe7\xf1'
+  Image 2: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\x00\x00\x00\xff\x00\x00\x00\xff'
+Claim 6 (user_006): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xe5\xf3\xfe\xe5\xf3\xfe\xe7\xf1'
+  Image 2: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\x00\x00\x00\xff\x00\x00\x00\xff'
+Claim 7 (user_003): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xbd\xd0\xd4\xbe\xd1\xd5\xbe\xd1'
+Claim 8 (user_008): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xbd\xd0\xd4\xbe\xd1\xd5\xbe\xd1'
+Claim 9 (user_009): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'_f"fm)lu'
+  Image 2: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\xcd\xd3\xdf\xca\xd0\xdc\xd0\xd6'
+Claim 10 (user_010): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'_f"fm)lu'
+  Image 2: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\xcd\xd3\xdf\xca\xd0\xdc\xd0\xd6'
+Claim 11 (user_011): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.WebPImagePlugin.WebPImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\x0f\x1d\r\x0e\x1d\x13^m'
+Claim 12 (user_012): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.WebPImagePlugin.WebPImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\x0f\x1d\r\x0e\x1d\x13^m'
+Claim 13 (user_018): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xeb\xec\xf0\xff\xeb\xec\xf0\xff'
+  Image 2: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\x8a\x83}\x8b\x84~\x8b\x84'
+Claim 14 (user_020): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\xeb\xec\xf0\xff\xeb\xec\xf0\xff'
+  Image 2: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\x8a\x83}\x8b\x84~\x8b\x84'
+Claim 15 (user_015): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\x1c\x1e\x13\x1d\x1f\x14 !'
+Claim 16 (user_030): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\x1c\x1e\x13\x1d\x1f\x14 !'
+Claim 17 (user_031): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'qnfxunxu'
+Claim 18 (user_032): 1 images passed to generate_content.
+  Image 1: type=<class 'PIL.PngImagePlugin.PngImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'qnfxunxu'
+Claim 19 (user_033): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\x99\x94\x8e\x99\x94\x8e\x99\x94'
+  Image 2: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\xe2\xde\xd3\xd9\xd5\xcc\xbc\xb9'
+Claim 20 (user_034): 2 images passed to generate_content.
+  Image 1: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 1 payload first 8 bytes: b'\x99\x94\x8e\x99\x94\x8e\x99\x94'
+  Image 2: type=<class 'PIL.JpegImagePlugin.JpegImageFile'>, mime_type=None (PIL Image object)
+  Image 2 payload first 8 bytes: b'\xe2\xde\xd3\xd9\xd5\xcc\xbc\xb9'
+
+--- VERDICT ---
+VERDICT: IMAGES LOADING CORRECTLY — bug is not image I/O

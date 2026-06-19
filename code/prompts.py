@@ -10,6 +10,9 @@ Valid object_part values for this claim: {object_part_enum}
 Do not use object_part values from any other domain.
 
 Rules:
+- STEP 0 — OBJECT MATCH CHECK: Does AT LEAST ONE provided image actually show a {claim_object}?
+  - If NO image shows a {claim_object}: this claim is a fraud/mismatch signal. Set claim_status="contradicted", risk_flags must include "wrong_object", issue_type="unknown", object_part="unknown", valid_image=false, evidence_standard_met=false, and STOP — do not attempt damage analysis on images of the wrong object.
+  - If YES, at least one image shows the correct object: proceed to full damage analysis below, using only the images that actually show a {claim_object}.
 - supporting_image_ids must only reference image IDs actually provided to you.
 - Use "unknown" when the issue/part cannot be determined from the images.
 - Use issue_type="none" only if the relevant part IS visible and shows no damage.
@@ -36,7 +39,7 @@ Analyze the images below. They are the only evidence that matters."""
 
 # --- Self-check ---
 if __name__ == "__main__":
-    sp = SYSTEM_PROMPT.format(object_part_enum="door, hood")
+    sp = SYSTEM_PROMPT.format(object_part_enum="door, hood", claim_object="car")
     assert "door, hood" in sp
     
     up = USER_PROMPT_TEMPLATE.format(

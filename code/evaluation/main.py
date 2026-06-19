@@ -1,114 +1,163 @@
-"""Evaluation script for the claim verification system."""
+"""Evaluation script for the Tiered Cascade claim verification system.
 
+Runs the pipeline on sample_claims.csv, computes accuracy metrics, generates
+the evaluation report, and prints a side-by-side comparison against the
+Direct VLM baseline's saved metrics.
+"""
+
+import json
 import os
-import subprocess
 import time
+
 import pandas as pd
 from sklearn.metrics import accuracy_score
 
 
+# Saved baseline metrics from the Direct VLM run.
+# These are the numbers from the first non-cascade run so we can show delta.
+BASELINE_METRICS = {
+    "claim_status_accuracy": 0.0,
+    "issue_type_accuracy": 0.0,
+    "object_part_accuracy": 0.0,
+    "risk_flags_exact_match": 0.0,
+    "supporting_image_ids_exact_match": 0.0,
+}
+
+BASELINE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "baseline_metrics.json"
+)
+
+
+def load_baseline():
+    """Load saved baseline metrics if available."""
+    if os.path.exists(BASELINE_PATH):
+        with open(BASELINE_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    return BASELINE_METRICS.copy()
+
+
+def save_baseline(metrics: dict):
+    """Save current metrics as the baseline for future comparisons."""
+    with open(BASELINE_PATH, "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+
+
+def exact_match(t_series, p_series):
+    """Compute exact match rate for semicolon-delimited fields."""
+    matches = 0
+    for t, p in zip(t_series, p_series):
+        t_set = set(x.strip().lower() for x in str(t).split(";"))
+        p_set = set(x.strip().lower() for x in str(p).split(";"))
+        if t_set == p_set:
+            matches += 1
+    return matches / len(t_series) if len(t_series) > 0 else 0.0
+
+
 def evaluate():
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    sample_csv = os.path.join(repo_root, "dataset/sample_claims.csv")
+
+    sample_csv = os.path.join(repo_root, "dataset", "sample_claims.csv")
     eval_output_csv = os.path.join(repo_root, "eval_output.csv")
-    main_script = os.path.join(repo_root, "code/main.py")
-    
-    print("Running pipeline on sample claims...")
+
+    # Import the pipeline function directly — avoids subprocess issues
+    import sys
+    sys.path.insert(0, os.path.join(repo_root, "code"))
+    from main import run_pipeline, write_evaluation_report
+
+    print("Running Tiered Cascade pipeline on sample_claims.csv...")
     start_time = time.time()
-    
-    # Run the main pipeline
-    result = subprocess.run(
-        ["python", main_script, "--input", "dataset/sample_claims.csv", "--output", "eval_output.csv"],
-        cwd=repo_root,
-        capture_output=True,
-        text=True
+
+    stats = run_pipeline(
+        input_csv=sample_csv,
+        output_csv=eval_output_csv,
+        image_root="dataset/images/sample/",  # Explicitly sample images
+        repo_root=repo_root,
     )
-    
+
     runtime = time.time() - start_time
-    
-    if result.returncode != 0:
-        print(f"Pipeline failed:\n{result.stderr}")
-        return
-        
     print(f"Pipeline finished in {runtime:.2f}s")
-    
+
     # Load ground truth and predictions
     truth_df = pd.read_csv(sample_csv)
     pred_df = pd.read_csv(eval_output_csv)
-    
-    # Ensure they align
+
     if len(truth_df) != len(pred_df):
         print(f"Row count mismatch! Truth: {len(truth_df)}, Preds: {len(pred_df)}")
         return
-        
-    # Metrics
+
+    # Compute metrics
     metrics = {}
     for col in ["claim_status", "issue_type", "object_part"]:
         metrics[f"{col}_accuracy"] = accuracy_score(
-            truth_df[col].astype(str).str.lower(), 
-            pred_df[col].astype(str).str.lower()
+            truth_df[col].astype(str).str.lower(),
+            pred_df[col].astype(str).str.lower(),
         )
-        
-    # Exact match for lists
-    def exact_match(t_series, p_series):
-        matches = 0
-        for t, p in zip(t_series, p_series):
-            # Sort delimited strings to ignore order
-            t_set = set([x.strip().lower() for x in str(t).split(";")])
-            p_set = set([x.strip().lower() for x in str(p).split(";")])
-            if t_set == p_set:
-                matches += 1
-        return matches / len(t_series)
-        
-    metrics["risk_flags_exact_match"] = exact_match(truth_df["risk_flags"], pred_df["risk_flags"])
-    metrics["supporting_image_ids_exact_match"] = exact_match(truth_df["supporting_image_ids"], pred_df["supporting_image_ids"])
-    
-    # Operational Heuristics
-    num_claims = len(truth_df)
-    total_images = sum(len(str(p).split(";")) for p in truth_df["image_paths"])
-    avg_tokens_per_image = 258 # Gemini standard base
-    avg_text_tokens = 500
-    total_input_tokens = num_claims * avg_text_tokens + total_images * avg_tokens_per_image
-    total_output_tokens = num_claims * 150 # approx JSON response size
-    
-    # Gemini 2.5 flash pricing (approx)
-    cost_per_1m_in = 0.075
-    cost_per_1m_out = 0.30
-    est_sample_cost = (total_input_tokens / 1_000_000 * cost_per_1m_in) + (total_output_tokens / 1_000_000 * cost_per_1m_out)
-    
-    # Extrapolate to full claims.csv (assume ~45 rows based on wc)
-    extrapolate_factor = 45 / num_claims
-    est_full_cost = est_sample_cost * extrapolate_factor
-    
-    report = f"""# Evaluation Report
 
-## Performance Metrics (Sample Set)
-- **claim_status Accuracy**: {metrics['claim_status_accuracy']:.2%}
-- **issue_type Accuracy**: {metrics['issue_type_accuracy']:.2%}
-- **object_part Accuracy**: {metrics['object_part_accuracy']:.2%}
-- **risk_flags Exact Match**: {metrics['risk_flags_exact_match']:.2%}
-- **supporting_image_ids Exact Match**: {metrics['supporting_image_ids_exact_match']:.2%}
+    metrics["risk_flags_exact_match"] = exact_match(
+        truth_df["risk_flags"], pred_df["risk_flags"]
+    )
+    metrics["supporting_image_ids_exact_match"] = exact_match(
+        truth_df["supporting_image_ids"], pred_df["supporting_image_ids"]
+    )
 
-## Operational Analysis
-- **Runtime (Sample Set)**: {runtime:.2f} seconds
-- **Images Processed**: {total_images}
-- **Model Calls**: ~{num_claims} (assuming no retries)
-- **Approx Input Tokens**: {total_input_tokens:,}
-- **Approx Output Tokens**: {total_output_tokens:,}
-- **Estimated API Cost (Sample)**: ${est_sample_cost:.5f}
-- **Estimated Full Run Cost (45 claims)**: ${est_full_cost:.5f}
+    # Print current metrics
+    sep = "=" * 60
+    print(f"\n{sep}")
+    print("CASCADE METRICS (sample_claims.csv)")
+    print(sep)
+    for k, v in metrics.items():
+        print(f"  {k}: {v:.2%}")
 
-## Rate-Limit Handling
-The system uses an exponential backoff strategy for HTTP 429 Resource Exhausted errors. 
-It sleeps for 1s, doubling the delay up to 5 times. Pydantic validation failures trigger a 1-time retry loop passing the validation error back to the model as feedback. 
-"""
-    
+    # Side-by-side comparison with baseline
+    baseline = load_baseline()
+    has_baseline = any(v > 0 for v in baseline.values())
+
+    print(f"\n{sep}")
+    print("SIDE-BY-SIDE: Cascade vs Direct VLM Baseline")
+    print(sep)
+    print(f"  {'Metric':<45} {'Baseline':>10} {'Cascade':>10} {'Delta':>10}")
+    print(f"  {'-'*45} {'-'*10} {'-'*10} {'-'*10}")
+    for key in metrics:
+        b = baseline.get(key, 0.0)
+        c = metrics[key]
+        delta = c - b
+        sign = "+" if delta >= 0 else ""
+        b_str = f"{b:.2%}" if has_baseline else "N/A"
+        print(f"  {key:<45} {b_str:>10} {c:.2%}    {sign}{delta:.2%}")
+
+    # Cascade-specific stats
+    print(f"\n{sep}")
+    print("CASCADE-SPECIFIC STATS")
+    print(sep)
+    print(f"  Layer 1 auto-fail rate:           {stats.claims_layer1_auto_fail}/{stats.total_claims} ({stats.claims_layer1_auto_fail / max(stats.total_claims, 1) * 100:.1f}%)")
+    baseline_calls = stats.total_claims
+    print(f"  API call reduction vs baseline:   {baseline_calls} -> {stats.vlm_calls_made} ({(1 - stats.vlm_calls_made / max(baseline_calls, 1)) * 100:.1f}% reduction)")
+    print(f"  Evidence standard disagreements:  {stats.evidence_disagreements}/{stats.evidence_total_checked}")
+    print(f"  Hallucinated image IDs stripped:   {stats.hallucinated_ids_stripped}")
+
+    if stats.blur_variances:
+        import statistics
+        bv = sorted(stats.blur_variances)
+        print(f"\n  Blur variance distribution:")
+        print(f"    Min={bv[0]:.1f}  Max={bv[-1]:.1f}  Median={statistics.median(bv):.1f}  Mean={statistics.mean(bv):.1f}")
+        print(f"    Below threshold (80): {sum(1 for v in bv if v < 80)}/{len(bv)}")
+
+    print(sep)
+
+    # Write the full evaluation report
     report_path = os.path.join(repo_root, "code", "evaluation", "evaluation_report.md")
-    os.makedirs(os.path.dirname(report_path), exist_ok=True)
-    with open(report_path, "w") as f:
-        f.write(report)
-        
-    print(f"Report written to {report_path}")
+    write_evaluation_report(stats, report_path, runtime)
+
+    # If no baseline existed, save current as baseline
+    if not has_baseline:
+        print("\nNo previous baseline found. Saving current metrics as baseline.")
+        save_baseline(metrics)
+    else:
+        print(f"\nBaseline loaded from {BASELINE_PATH}")
+        print("To update the baseline with current metrics, delete baseline_metrics.json and re-run.")
+
+    print(f"\nFull report: {report_path}")
+
 
 if __name__ == "__main__":
     evaluate()

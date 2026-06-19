@@ -40,3 +40,13 @@ This script will:
 2. Compare the generated predictions against the ground truth labels.
 3. Compute accuracy and exact-match rates.
 4. Output a detailed analysis to `evaluation/evaluation_report.md`.
+
+## Key Policy Decisions
+
+### `wrong_object` strictly implies `contradicted`
+When the Gatekeeper or VLM detects that all provided images fail to show the claimed object (e.g., the claim is about a `laptop`, but the image shows a `tree`), this is **not** treated as an ambiguous lack of evidence (`not_enough_information`). It is treated as an active contradiction of the claim.
+
+In this pipeline:
+- If `wrong_object` is flagged by the local CLIP pre-check, the claim skips the VLM API call entirely (saving cost) and is auto-failed.
+- If the VLM flags `wrong_object` during analysis, the system's deterministic consistency checks override the final status to `contradicted` and appends `claim_mismatch` to the `risk_flags`.
+This guarantees that gross mismatches are deterministically rejected without relying on the VLM to maintain logical consistency across its output JSON.

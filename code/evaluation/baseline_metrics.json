@@ -1,0 +1,7 @@
+{
+  "claim_status_accuracy": 0.2,
+  "issue_type_accuracy": 0.1,
+  "object_part_accuracy": 0.2,
+  "risk_flags_exact_match": 0.15,
+  "supporting_image_ids_exact_match": 0.25
+}
