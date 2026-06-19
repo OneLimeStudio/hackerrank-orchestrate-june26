@@ -199,19 +199,19 @@ without updating this file.
 
 ### 6.2 Constraints that make the submission evaluable
 
-- **Deterministic where possible.**.
+- **Deterministic where possible.**
 - **Add proper README** to the code/ you write.
 - **Read secrets from env vars only** (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
   etc.). Never hardcode.
----
 
+---
 
 ## 7. CROSS-PLATFORM AND AGENT-COMPATIBILITY NOTES
 
 - **Path handling.** Always resolve the log path using the platform's home dir (`os.homedir()` / `pathlib.Path.home()` / `$HOME` / `%USERPROFILE%`). Never hardcode `/Users/...` or `C:\Users\...`.
 - **Line endings.** Write the log in UTF-8 with `\n`. Don't emit `\r\n` even on Windows; most editors render `\n` fine.
 - **Shell.** Don't assume bash. Prefer language-native APIs over shelling out. When you must shell out, provide both a Unix and a Windows form.
-- **Tool-specific extras.** This file is the canonical source. If a tool (Claude Code, Cursor, etc.) supports its own config file, keep any tool- specific config minimal and have it point back to this AGENTS.md rather than duplicating rules.
+- **Tool-specific extras.** This file is the canonical source. If a tool (Claude Code, Cursor, etc.) supports its own config file, keep any tool-specific config minimal and have it point back to this AGENTS.md rather than duplicating rules.
 - **Nested AGENTS.md.** If a sub-project adds its own AGENTS.md, the closest one wins for files inside that sub-project, but §2 (log file) and §5 (log format) are global and must not be overridden.
 
 ---
@@ -228,3 +228,111 @@ Before you respond to any user message, confirm:
 - [ ] I will preserve the entry-point contract in §6.
 
 If any box is unchecked, fix that first.
+
+---
+
+## 9. AGENT BEHAVIORAL GUIDELINES
+
+> Sources: Andrej Karpathy's CLAUDE.md + Ponytail lazy-senior-dev mode.
+> Apply to every code-producing action, for every agent, no exceptions.
+> Tradeoff: biased toward caution over speed. For trivial one-liners, use judgment — but when in doubt, follow in order.
+
+### 9.1 Pre-Code Gate — stop at the first rung that holds
+
+Before writing a single line, work down this ladder and stop at the first rung that resolves the task:
+
+1. Does this need to be built at all? (YAGNI — if no, say so and stop)
+2. Does the standard library already do this? Use it.
+3. Does a native platform feature cover it? Use it.
+4. Does an already-installed dependency solve it? Use it.
+5. Can this be one line? Make it one line.
+6. Only then: write the minimum code that works.
+
+Question complex requests out loud: *"Do you actually need X, or does Y cover it?"*
+
+### 9.2 Think Before Coding
+
+Before implementing anything:
+
+- State assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 9.3 Simplicity First
+
+- No features beyond what was asked. No abstractions for single-use code.
+- No new dependency if it can be avoided. No boilerplate nobody asked for.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- Deletion over addition. Boring over clever. Fewest files possible.
+- If you write 200 lines and it could be 50, rewrite it.
+- When two stdlib approaches are the same size, pick the edge-case-correct one — lazy means less code, not the flimsier algorithm.
+
+Ask yourself: *"Would a senior engineer say this is overcomplicated?"* If yes, simplify.
+
+**Mark intentional simplifications** with a `ponytail:` comment. If the shortcut has a known ceiling (global lock, O(n²) scan, naive heuristic), name the ceiling and the upgrade path.
+
+```python
+# ponytail: linear scan fine for <1 000 claims; upgrade to bisect if dataset grows
+```
+
+### 9.4 Surgical Changes
+
+When editing existing code:
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it.
+
+When your changes create orphans:
+
+- Remove imports/variables/functions that **your** changes made unused.
+- Don't remove pre-existing dead code unless explicitly asked.
+
+The test: every changed line must trace directly to the user's request.
+
+### 9.5 Goal-Driven Execution
+
+Transform vague tasks into verifiable goals before writing code:
+
+| Vague task | Verifiable goal |
+|---|---|
+| "Add validation" | Write tests for invalid inputs, then make them pass |
+| "Fix the bug" | Write a test that reproduces it, then make it pass |
+| "Refactor X" | Ensure tests pass before and after |
+
+For multi-step tasks, state a brief plan first:
+
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+### 9.6 Non-Negotiables — never lazy about these
+
+Full rigor always required on:
+
+- Input validation at trust boundaries (user input, file contents, API responses).
+- Error handling that prevents data loss.
+- Security — no shortcuts on auth, secrets, or injection surfaces.
+- Accessibility, if building UI.
+- Hardware/sensor calibration — the platform is never the spec ideal; a clock drifts, a sensor reads off.
+- Anything explicitly requested by the user.
+
+### 9.7 Self-Check Requirement
+
+Lazy code without its check is unfinished.
+
+- **Non-trivial logic:** leave exactly one runnable check — the smallest thing that fails if the logic breaks. An assert-based self-check or one small test file. No frameworks, no fixtures.
+- **Trivial one-liners:** no test needed.
+
+```python
+# Example — runs standalone, no pytest required
+if __name__ == "__main__":
+    assert parse_claim("") is None
+    assert parse_claim("valid") == {"id": "valid"}
+    print("ok")
+```
