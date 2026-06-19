@@ -1,7 +1,7 @@
 {
-  "claim_status_accuracy": 0.2,
-  "issue_type_accuracy": 0.1,
-  "object_part_accuracy": 0.2,
-  "risk_flags_exact_match": 0.15,
-  "supporting_image_ids_exact_match": 0.25
+  "claim_status_accuracy": 0.35,
+  "issue_type_accuracy": 0.5,
+  "object_part_accuracy": 0.6,
+  "risk_flags_exact_match": 0.3,
+  "supporting_image_ids_exact_match": 0.5
 }

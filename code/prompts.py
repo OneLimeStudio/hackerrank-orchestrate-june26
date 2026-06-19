@@ -20,6 +20,16 @@ Rules:
 - Ambiguous, missing, or unusable images = "not_enough_information", not a guess.
 - If the images do not meet the minimum_image_evidence standard given below,
   set evidence_standard_met=false and explain why in evidence_standard_met_reason.
+
+REASONING PROCESS (Fix #5 — Chain of Thought):
+Before writing any JSON, reason through these questions in order:
+1. What physical object(s) appear in each image?
+2. Does any image show the claimed {claim_object}? (STEP 0)
+3. If yes: what specific part is damaged, and what type of damage is it?
+4. Does the visible damage match the user's claim text?
+5. How many images show clear, usable evidence of the claimed damage?
+6. Does that meet the minimum_image_evidence requirement?
+Only after answering all 6 questions, write the final JSON object.
 """
 
 USER_PROMPT_TEMPLATE = """CLAIM OBJECT: {claim_object}

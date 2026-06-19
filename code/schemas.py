@@ -76,10 +76,13 @@ class BaseClaimOutput(BaseModel):
     @classmethod
     def validate_risk_flags(cls, v: str) -> str:
         flags = [f.strip() for f in v.split(";")]
+        valid = [f for f in flags if f in VALID_RISK_FLAGS]
         invalid = [f for f in flags if f not in VALID_RISK_FLAGS]
         if invalid:
-            raise ValueError(f"Invalid risk_flags: {invalid}")
-        return v
+            # Strip bad values silently; inject manual_review so nothing is lost
+            if "manual_review_required" not in valid:
+                valid.append("manual_review_required")
+        return ";".join(valid) if valid else "none"
 
 
 class CarClaimOutput(BaseClaimOutput):

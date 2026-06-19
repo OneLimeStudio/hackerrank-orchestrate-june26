@@ -18,8 +18,7 @@ import pandas as pd
 from PIL import Image
 from dotenv import load_dotenv
 
-from google import genai
-from google.genai import types
+from openai import OpenAI
 
 from schemas import (
     DOMAIN_MODEL_MAP,
@@ -58,11 +57,11 @@ class RunStats:
 class ClientPool:
     """Manages a pool of Gemini clients to rotate API keys on quota exhaustion."""
     def __init__(self, api_keys: List[str]):
-        self.clients = [genai.Client(api_key=key) for key in api_keys]
+        self.clients = [OpenAI(api_key=key) for key in api_keys]
         self.current_idx = 0
         logging.info(f"Initialized ClientPool with {len(self.clients)} API keys.")
 
-    def get_client(self) -> genai.Client:
+    def get_client(self) -> OpenAI:
         return self.clients[self.current_idx]
 
     def rotate_client(self):
@@ -80,15 +79,15 @@ def ensure_env() -> None:
     load_dotenv(os.path.join(repo_root, ".env"))
     load_dotenv(os.path.join(repo_root, "code", ".env"))
 
-    has_key = any(k.startswith("GEMINI_API_KEY") and v.strip() for k, v in os.environ.items())
+    has_key = any(k.startswith("OPENAI_KEY") and v.strip() for k, v in os.environ.items())
     if not has_key:
         env_path = ".env"
         if not os.path.exists(env_path):
             with open(env_path, "w", encoding="utf-8") as f:
-                f.write("GEMINI_API_KEY=\nGEMINI_MODEL=gemini-2.5-flash\n")
+                f.write("OPENAI_KEY=\nOPENAI_MODEL=gpt-4.1-nano\n")
         logging.error(
-            "GEMINI_API_KEY is missing or empty! "
-            "Please add your Gemini API key to .env and run again."
+            "OPENAI_KEY is missing or empty! "
+            "Please add your OpenAI API key to .env and run again."
         )
         sys.exit(1)
 
@@ -105,20 +104,20 @@ def load_user_history(path: str) -> Dict[str, Dict[str, Any]]:
 def generate_with_backoff(
     client_pool: ClientPool,
     model_name: str,
-    contents: list,
-    config: types.GenerateContentConfig,
+    messages: list,
+    response_format: type,
     max_retries: int = 5,
 ) -> Any:
-    """Call Gemini API with exponential backoff and API key rotation."""
-    # ponytail: simple exponential backoff with key rotation.
+    """Call OpenAI API with exponential backoff and API key rotation."""
     delay = 1.0
     for attempt in range(max_retries + 1):
         client = client_pool.get_client()
         try:
-            return client.models.generate_content(
+            return client.beta.chat.completions.parse(
                 model=model_name,
-                contents=contents,
-                config=config,
+                messages=messages,
+                response_format=response_format,
+                temperature=0.0,
             )
         except Exception as e:
             err_msg = str(e).lower()
@@ -252,7 +251,7 @@ def process_claim_vlm(
     actual_image_ids = gk_result.valid_image_ids
 
     # ── INSTRUMENTATION: log image payload before every API call ──
-    total_bytes = sum(len(p.inline_data.data) for p in image_parts) if image_parts else 0
+    total_bytes = sum(len(p["image_url"]["url"]) for p in image_parts) if image_parts else 0
     logging.info(
         f"[claim={user_id}] images_attached={len(image_parts)} total_bytes={total_bytes}"
     )
@@ -268,6 +267,35 @@ def process_claim_vlm(
     # Pick Pydantic model and enum
     pydantic_model = DOMAIN_MODEL_MAP.get(claim_object, DOMAIN_MODEL_MAP["car"])
     enum_str = OBJECT_PART_ENUMS.get(claim_object, OBJECT_PART_ENUMS["car"])
+
+    # Fix #3 — Two-pass: Call 1 confirms object presence cheaply before full analysis
+    if image_parts:
+        try:
+            check_messages = [
+                {"role": "system", "content": f"You are an image classifier. Answer in one word only."},
+                {"role": "user", "content": [
+                    {"type": "text", "text": f"Does this image show a {claim_object}? Answer ONLY 'yes' or 'no'."},
+                ] + list(image_parts[:1])},  # Only send first image for speed
+            ]
+            check_resp = client_pool.get_client().chat.completions.create(
+                model=model_name,
+                messages=check_messages,
+                max_tokens=5,
+                temperature=0.0,
+            )
+            answer = check_resp.choices[0].message.content.strip().lower()
+            if "no" in answer and "yes" not in answer:
+                logging.warning(
+                    f"[claim={user_id}] Two-pass check: model says NOT a {claim_object}. "
+                    "Flagging wrong_object and skipping full analysis."
+                )
+                stats.anti_hallucination_downgrades += 1
+                return _safe_defaults(
+                    reason=f"Two-pass check: images do not show a {claim_object}.",
+                    extra_flags=["wrong_object", "manual_review_required"],
+                )
+        except Exception as e:
+            logging.warning(f"[claim={user_id}] Two-pass check failed, continuing: {e}")
 
     # Build prompts
     sys_prompt = SYSTEM_PROMPT.format(object_part_enum=enum_str, claim_object=claim_object)
@@ -297,27 +325,41 @@ def process_claim_vlm(
         image_id_list=", ".join(actual_image_ids) if actual_image_ids else "none",
     ) + layer1_note
 
-    contents = [user_prompt] + list(image_parts)
+    # Look for reference images in dataset/reference_images/
+    ref_images = []
+    ref_dir = os.path.join(repo_root, "dataset", "reference_images", claim_object)
+    if os.path.exists(ref_dir):
+        import base64
+        import glob
+        for fpath in glob.glob(os.path.join(ref_dir, "*.*")):
+            ext = fpath.lower()
+            if ext.endswith(('.jpg', '.jpeg', '.png', '.webp')):
+                try:
+                    with open(fpath, "rb") as f:
+                        b64_str = base64.b64encode(f.read()).decode('utf-8')
+                    mime = "image/png" if ext.endswith(".png") else "image/webp" if ext.endswith(".webp") else "image/jpeg"
+                    ref_images.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64_str}"}})
+                except Exception as e:
+                    logging.warning(f"Failed to load ref image {fpath}: {e}")
+    if ref_images:
+        sys_prompt += "\n\nREFERENCE IMAGES INCLUDED BELOW. Use these to calibrate your definitions of damage."
 
-    config = types.GenerateContentConfig(
-        system_instruction=sys_prompt,
-        response_mime_type="application/json",
-        response_schema=pydantic_model,
-        temperature=0.0,
-    )
+    # OpenAI format:
+    messages = [
+        {"role": "system", "content": [{"type": "text", "text": sys_prompt}] + ref_images},
+    ]
+
+    user_content = [{"type": "text", "text": user_prompt}] + list(image_parts)
 
     # Call API with correction loop (max 1 retry)
     error_feedback = ""
     for attempt in range(2):
         if attempt > 0:
             stats.claims_pydantic_retry += 1
-            retry_contents = [
-                user_prompt + f"\n\nERROR IN PREVIOUS RESPONSE: {error_feedback}\n"
-                "Please correct the JSON and adhere to the schema." + layer1_note
-            ] + list(image_parts)
-            call_contents = retry_contents
+            retry_text = user_prompt + f"\n\nERROR IN PREVIOUS RESPONSE: {error_feedback}\n" + "Please correct the JSON and adhere to the schema." + layer1_note
+            call_messages = messages + [{"role": "user", "content": [{"type": "text", "text": retry_text}] + list(image_parts)}]
         else:
-            call_contents = contents
+            call_messages = messages + [{"role": "user", "content": user_content}]
 
         try:
             cache_file = os.path.join(repo_root, "code", "vlm_cache", f"{user_id}_attempt_{attempt}.json")
@@ -334,8 +376,8 @@ def process_claim_vlm(
             
             if raw_text is None:
                 stats.vlm_calls_made += 1
-                response = generate_with_backoff(client_pool, model_name, call_contents, config)
-                raw_text = response.text
+                response = generate_with_backoff(client_pool, model_name, call_messages, pydantic_model)
+                raw_text = response.choices[0].message.content
                 try:
                     with open(cache_file, "w", encoding="utf-8") as f:
                         f.write(raw_text)
@@ -365,6 +407,16 @@ def process_claim_vlm(
             # Merge Layer 1 flags into risk_flags
             for flag in gk_result.all_flags:
                 _merge_flag(result_dict, flag)
+
+            # Deterministic user history risk (Fix #3)
+            try:
+                h_rejects = int(history.get("rejected_claim", 0))
+                h_flags = str(history.get("history_flags", "none")).strip().lower()
+                h_recent = int(history.get("last_90_days_claim_count", 0))
+                if h_rejects > 0 or (h_flags != "none" and h_flags != "nan") or h_recent >= 3:
+                    _merge_flag(result_dict, "user_history_risk")
+            except Exception as e:
+                logging.debug(f"Failed to parse history risk: {e}")
 
             return result_dict
 
@@ -420,12 +472,12 @@ def run_pipeline(
     evidence_checker = EvidenceChecker(reqs_path)
 
     # API client pool
-    api_keys = [v.strip() for k, v in os.environ.items() if k.startswith("GEMINI_API_KEY") and v.strip()]
+    api_keys = [v.strip() for k, v in os.environ.items() if k.startswith("OPENAI_KEY") and v.strip()]
     if not api_keys:
-        logging.error("No valid GEMINI_API_KEY found.")
+        logging.error("No valid OPENAI_KEY found.")
         sys.exit(1)
     client_pool = ClientPool(api_keys)
-    model_name = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    model_name = os.environ.get("OPENAI_MODEL", "gpt-4.1-nano")
 
     gatekeeper = Gatekeeper()
     stats = RunStats()
@@ -566,8 +618,10 @@ def _print_summary(stats: RunStats) -> None:
         logging.info(line)
 
 
-def write_evaluation_report(stats: RunStats, report_path: str, runtime: float = 0.0) -> None:
+def write_evaluation_report(stats: RunStats, report_path: str, runtime: float = 0.0, metrics: dict = None) -> None:
     """Write evaluation_report.md from run stats."""
+    import datetime
+    run_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     total_images = len(stats.blur_variances)
     blur_vals = sorted(stats.blur_variances)
     blur_dist = ""
@@ -601,12 +655,20 @@ def write_evaluation_report(stats: RunStats, report_path: str, runtime: float = 
     total_input_tokens = cascade_calls * avg_text_tokens + total_images * avg_tokens_per_image
     total_output_tokens = cascade_calls * 150
 
-    # Gemini 2.5 flash pricing
-    cost_in = 0.075  # per 1M input tokens
-    cost_out = 0.30   # per 1M output tokens
+    # OpenAI gpt-4o pricing
+    cost_in = 5.00   # per 1M input tokens
+    cost_out = 15.00  # per 1M output tokens
     est_cost = (total_input_tokens / 1_000_000 * cost_in) + (total_output_tokens / 1_000_000 * cost_out)
 
+    # Accuracy metrics section
+    metrics_section = ""
+    if metrics:
+        metrics_section = "\n## Accuracy Metrics\n"
+        for k, v in metrics.items():
+            metrics_section += f"- **{k}**: {v:.2%}\n"
+
     report = f"""# Evaluation Report — Tiered Cascade Pipeline
+# Run: {run_ts}
 
 ## Run Summary
 - **Total claims processed**: {stats.total_claims}
@@ -638,13 +700,14 @@ def write_evaluation_report(stats: RunStats, report_path: str, runtime: float = 
 - **Approx input tokens**: {total_input_tokens:,}
 - **Approx output tokens**: {total_output_tokens:,}
 - **Estimated API cost**: ${est_cost:.5f}
-- **Pricing**: Gemini 2.5 Flash — $0.075/1M input, $0.30/1M output
+- **Pricing**: OpenAI gpt-4o — $5.00/1M input, $15.00/1M output
 
 ## Rate-Limit Handling
 Exponential backoff (1s → 2s → 4s → …) with automatic API key rotation across
 a pool of keys. Pydantic validation failures trigger a 1-time retry with the
 validation error fed back to the model. Layer 1 gatekeeper pre-filters save
 API calls for claims with unusable images.
+{metrics_section}
 """
 
     os.makedirs(os.path.dirname(report_path), exist_ok=True)

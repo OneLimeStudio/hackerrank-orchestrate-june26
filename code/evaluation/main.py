@@ -53,6 +53,24 @@ def exact_match(t_series, p_series):
     return matches / len(t_series) if len(t_series) > 0 else 0.0
 
 
+def f1_set_score(t_series, p_series):
+    """Fix #4 — F1 score for semicolon-delimited fields (partial credit)."""
+    # ponytail: linear scan fine for <1000 claims
+    f1s = []
+    for t, p in zip(t_series, p_series):
+        t_set = set(x.strip().lower() for x in str(t).split(";") if x.strip() and x.strip() != "none")
+        p_set = set(x.strip().lower() for x in str(p).split(";") if x.strip() and x.strip() != "none")
+        if not t_set and not p_set:
+            f1s.append(1.0)  # both predicted empty correctly
+            continue
+        tp = len(t_set & p_set)
+        prec = tp / len(p_set) if p_set else 0.0
+        rec = tp / len(t_set) if t_set else 0.0
+        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+        f1s.append(f1)
+    return sum(f1s) / len(f1s) if f1s else 0.0
+
+
 def evaluate():
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -96,7 +114,13 @@ def evaluate():
     metrics["risk_flags_exact_match"] = exact_match(
         truth_df["risk_flags"], pred_df["risk_flags"]
     )
+    metrics["risk_flags_f1"] = f1_set_score(
+        truth_df["risk_flags"], pred_df["risk_flags"]
+    )
     metrics["supporting_image_ids_exact_match"] = exact_match(
+        truth_df["supporting_image_ids"], pred_df["supporting_image_ids"]
+    )
+    metrics["supporting_image_ids_f1"] = f1_set_score(
         truth_df["supporting_image_ids"], pred_df["supporting_image_ids"]
     )
 
@@ -144,9 +168,9 @@ def evaluate():
 
     print(sep)
 
-    # Write the full evaluation report
+    # Write the full evaluation report (metrics now included inside the md)
     report_path = os.path.join(repo_root, "code", "evaluation", "evaluation_report.md")
-    write_evaluation_report(stats, report_path, runtime)
+    write_evaluation_report(stats, report_path, runtime, metrics=metrics)
 
     # If no baseline existed, save current as baseline
     if not has_baseline:
