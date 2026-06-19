@@ -28,11 +28,9 @@ MIN_RESOLUTION = 100
 # CLIP similarity below this → hard flag "wrong_object".
 CLIP_THRESHOLD = 0.20
 
-# Set SKIP_BLUR=1 in .env to pass all images through regardless of blur score.
-# Blur variance is still computed and logged — only the auto-fail gate is disabled.
-# ponytail: used for ablation testing only; re-enable for production runs.
-SKIP_BLUR = "1"
-# os.environ.get("SKIP_BLUR", "0") == "1"
+# Set to True to pass all images regardless of blur (ablation mode).
+# Set to False to re-enable blur gating for cost reduction.
+SKIP_BLUR = True  # Currently: blur gate disabled for maximum accuracy
 # Attempt to import open_clip for optional object-match check.
 _clip_available = False
 try:
@@ -238,7 +236,7 @@ class Gatekeeper:
                     raw_for_upload = v.raw_bytes
                     mime_for_upload = v.mime_type
                 b64_str = base64.b64encode(raw_for_upload).decode('utf-8')
-                part = {"type": "image_url", "image_url": {"url": f"data:{mime_for_upload};base64,{b64_str}"}}
+                part = {"type": "image_url", "image_url": {"url": f"data:{mime_for_upload};base64,{b64_str}", "detail": "low"}}
                 result.valid_image_parts.append(part)
                 result.valid_image_ids.append(v.image_id)
 

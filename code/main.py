@@ -280,7 +280,7 @@ def process_claim_vlm(
             check_resp = client_pool.get_client().chat.completions.create(
                 model=model_name,
                 messages=check_messages,
-                max_tokens=5,
+                max_completion_tokens=5,
                 temperature=0.0,
             )
             answer = check_resp.choices[0].message.content.strip().lower()
@@ -338,7 +338,7 @@ def process_claim_vlm(
                     with open(fpath, "rb") as f:
                         b64_str = base64.b64encode(f.read()).decode('utf-8')
                     mime = "image/png" if ext.endswith(".png") else "image/webp" if ext.endswith(".webp") else "image/jpeg"
-                    ref_images.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64_str}"}})
+                    ref_images.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64_str}", "detail": "low"}})
                 except Exception as e:
                     logging.warning(f"Failed to load ref image {fpath}: {e}")
     if ref_images:
